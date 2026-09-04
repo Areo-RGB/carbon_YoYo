@@ -1,0 +1,180 @@
+/* Custom app styles that complement the Carbon white theme.
+   Carbon owns the base reset, type, and component styles via
+   `carbon-components-svelte/css/white.css` (imported in main.ts).
+   These rules only cover app-specific layout helpers. */
+
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; min-height: 100%; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+button:disabled { opacity: .45; cursor: default; }
+
+/* Carbon Content reserves space for the fixed header/sidenav;
+   tighten it slightly for this app. */
+.carbon-protocol-row { margin-bottom: 1rem; }
+
+/* Edge-to-edge: keep Carbon chrome clear of the status bar and display
+   cutout when the WebView draws behind system bars (Android edge-to-edge
+   + viewport-fit=cover). env() is 0 on desktop, so these are no-ops there. */
+.bx--header { padding-top: env(safe-area-inset-top); height: calc(3rem + env(safe-area-inset-top)); }
+.bx--side-nav { top: calc(3rem + env(safe-area-inset-top)); height: calc(100% - 3rem - env(safe-area-inset-top)); }
+.bx--content { margin-top: calc(3rem + env(safe-area-inset-top)); }
+
+main { min-width: 0; }
+.screen { max-width: 75rem; margin: 0 auto; padding: 1rem 0 6rem; }
+.screen-title { display: flex; justify-content: space-between; gap: 1.25rem; align-items: flex-end; margin-bottom: 1.75rem; flex-wrap: wrap; }
+.screen-title h1 { font-size: clamp(1.75rem, 4vw, 2.75rem); line-height: 1.05; margin: 0.3rem 0 0.6rem; letter-spacing: -0.02em; }
+.screen-title p { opacity: 0.65; max-width: 42rem; margin: 0; }
+.screen-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.eyebrow { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; opacity: 0.65; }
+.panel { border: 1px solid var(--cds-border-subtle, #e0e0e0); border-radius: 12px; background: var(--cds-layer-01, #f4f4f4); }
+.metrics-grid, .live-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.125rem; }
+.live-metrics { grid-template-columns: repeat(4, 1fr); }
+.metric-card { min-height: 7.25rem; padding: 1.125rem; border: 1px solid var(--cds-border-subtle, #e0e0e0); border-radius: 10px; background: var(--cds-layer-01, #f4f4f4); }
+.metric-card span, .metric-card small { display: block; opacity: 0.65; }
+.metric-card strong { display: block; font-size: 1.7rem; margin: 0.8rem 0 0.3rem; }
+.hero-panel { padding: 1.75rem; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.5rem; align-items: end; }
+.hero-panel h2 { margin: 0.5rem 0; font-size: 1.55rem; }
+.hero-panel p { opacity: 0.65; max-width: 42rem; }
+.button-row { display: flex; gap: 0.625rem; flex-wrap: wrap; }
+button.primary, button.secondary, button.danger, button.warning { border: 1px solid transparent; border-radius: 8px; padding: 0.625rem 0.875rem; }
+button.primary { background: var(--cds-interactive-01, #0f62fe); color: #fff; }
+button.secondary { background: transparent; border-color: var(--cds-border-strong, #8d8d8d); }
+button.danger { background: rgba(218, 30, 40, 0.08); border-color: rgba(218, 30, 40, 0.4); color: var(--cds-text-error, #da1e28); }
+button.warning { background: rgba(242, 165, 22, 0.12); border-color: rgba(242, 165, 22, 0.4); }
+button.large { min-width: 11.25rem; padding: 0.8rem 1.125rem; font-weight: 700; }
+button.compact { padding: 0.5rem 0.625rem; }
+.toolbar { display: flex; gap: 0.625rem; padding: 0.75rem; margin-bottom: 1rem; }
+.toolbar input { flex: 1; min-width: 10rem; border: 1px solid var(--cds-border-strong, #8d88d); border-radius: 8px; padding: 0.7rem 0.8rem; background: var(--cds-field-01, #f4f4f4); color: inherit; }
+.athlete-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 0.625rem; }
+.athlete-card { display: flex; align-items: center; gap: 0.75rem; text-align: left; padding: 0.875rem; border-radius: 10px; border: 1px solid var(--cds-border-subtle, #e0e0e0); background: var(--cds-layer-01, #f4f4f4); color: inherit; }
+.athlete-card.selected { border-color: var(--cds-interactive-01, #0f62fe); box-shadow: inset 0 0 0 1px var(--cds-interactive-01, #0f62fe); }
+.athlete-card strong, .athlete-card small, .live-athlete-row strong, .live-athlete-row small { display: block; }
+.athlete-card small, .live-athlete-row small { opacity: 0.65; margin-top: 0.2rem; }
+.avatar-placeholder { width: 2.4rem; height: 2.4rem; flex: 0 0 2.4rem; display: grid; place-items: center; border-radius: 50%; background: var(--cds-layer-02, #e8e8e8); font-weight: 800; }
+.test-controls { display: flex; gap: 0.625rem; padding: 0.875rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.live-athletes { display: grid; gap: 0.5rem; }
+.live-athlete-row { display: flex; gap: 0.7rem; align-items: center; padding: 0.75rem; border-radius: 10px; background: var(--cds-layer-01, #f4f4f4); border: 1px solid var(--cds-border-subtle, #e0e0e0); }
+.grow { flex: 1; min-width: 0; }
+.table-wrap { overflow: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 36rem; }
+th, td { padding: 0.875rem 1rem; border-bottom: 1px solid var(--cds-border-subtle, #e0e0e0); text-align: left; }
+th { opacity: 0.65; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.protocol-summary { padding: 1.125rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.protocol-summary span { opacity: 0.65; }
+.empty-state { padding: 3.375rem 1.25rem; border: 1px dashed var(--cds-border-strong, #8d8d8d); border-radius: 12px; text-align: center; opacity: 0.85; }
+.empty-state strong { font-size: 1.25rem; }
+.settings-list { display: grid; gap: 0.5625rem; }
+.setting-row { display: flex; justify-content: space-between; gap: 1.25rem; align-items: center; padding: 1rem 1.125rem; border: 1px solid var(--cds-border-subtle, #e0e0e0); border-radius: 10px; background: var(--cds-layer-01, #f4f4f4); }
+.setting-row strong, .setting-row small { display: block; }
+.setting-row small { opacity: 0.65; margin-top: 0.25rem; }
+.setting-row.vertical { align-items: stretch; flex-direction: column; }
+.badge { font-size: 0.75rem; padding: 0.375rem 0.5625rem; background: var(--cds-layer-02, #e8e8e8); border-radius: 999px; white-space: nowrap; }
+.bottom-nav { display: none; }
+
+/* P0 test-loop layout. Carbon owns component styling; these are app-level
+   layout helpers using Carbon tokens. */
+.section-gap { margin-bottom: 1rem; }
+.meter-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+.meter-state { display: flex; align-items: center; gap: 0.625rem; }
+.meter-clock { font-variant-numeric: tabular-nums; font-size: 1.25rem; opacity: 0.7; }
+.distance-number { font-size: clamp(2.5rem, 8vw, 4rem); font-weight: 700; letter-spacing: -0.02em; line-height: 1.05; }
+.meters-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.11em; opacity: 0.65; margin-bottom: 0.75rem; }
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-top: 1rem; }
+.stat-grid span { display: block; font-size: 0.75rem; opacity: 0.65; }
+.stat-grid strong { display: block; font-size: 1.35rem; margin-top: 0.35rem; }
+.stat-grid small { font-size: 0.8rem; font-weight: 400; opacity: 0.65; }
+.count-row { display: flex; gap: 0.625rem; flex-wrap: wrap; }
+.count-tile { flex: 1 1 8rem; padding: 0.875rem 1rem; }
+.count-tile b { display: block; font-size: 1.5rem; }
+.count-tile span { opacity: 0.65; }
+.roster-list { display: grid; gap: 0.5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 40rem) {
+  .roster-list { grid-template-columns: 1fr; }
+}
+.roster-row {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid transparent;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.roster-row.selected {
+  border-color: var(--cds-interactive-01, #0f62fe);
+  box-shadow: inset 0 0 0 1px var(--cds-interactive-01, #0f62fe);
+}
+.roster-row :global(.bx--form-item),
+.roster-row .bx--form-item {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+}
+.roster-row :global(.bx--checkbox-wrapper),
+.roster-row .bx--checkbox-wrapper {
+  margin: 0 !important;
+  display: flex;
+  align-items: center;
+}
+.roster-athlete-info {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  cursor: pointer;
+  min-width: 0;
+}
+.roster-athlete-info:focus-visible {
+  outline: 2px solid var(--cds-focus, #0f62fe);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.athlete-meta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.athlete-name {
+  font-size: 1rem;
+  line-height: 1.25;
+}
+.athlete-fullname {
+  opacity: 0.6;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  margin-top: 0.1rem;
+}
+.add-row { display: flex; gap: 0.625rem; align-items: flex-end; flex-wrap: wrap; }
+.add-row :first-child { flex: 1 1 12rem; }
+.protocol-note { opacity: 0.7; margin: 0.875rem 0 0; }
+.athlete-live-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.625rem; }
+.athlete-live { border-left: 4px solid transparent; border-radius: 8px; }
+.athlete-live.status-running { border-left-color: var(--cds-support-02, #24a148); }
+.athlete-live.status-warned { border-left-color: var(--cds-support-01, #da1e28); }
+.athlete-live.status-eliminated { border-left-color: var(--cds-border-subtle, #e0e0e0); }
+.athlete-live-top { display: flex; justify-content: space-between; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem; }
+.athlete-live-top strong, .athlete-live-top small { display: block; }
+.athlete-live-top small { opacity: 0.65; margin-top: 0.2rem; }
+.athlete-actions { margin-top: 0.25rem; }
+.final-line { margin: 0; opacity: 0.8; }
+.empty-copy { padding: 1.5rem; text-align: center; opacity: 0.7; }
+.start-row { position: sticky; bottom: 4.5rem; display: flex; gap: 0.625rem; margin-top: 1rem; flex-wrap: wrap; justify-content: center; }
+.start-row .bx--btn { border-radius: 8px; }
+.start-row .bx--btn--primary { flex: 0 1 auto; justify-content: center; font-weight: 600; font-size: 1.1rem; min-width: 12rem; padding-inline: 2rem; }
+.setting-stack { display: grid; gap: 0.75rem; }
+.setting-hint { opacity: 0.65; margin: 0; }
+
+/* Legacy layout hooks kept for compatibility; Carbon UIShell owns the chrome now. */
+.app-shell { min-height: 100vh; }
+.app-header, .side-nav, .nav-dot, .protocol-switch { display: revert; }
+
+@media (max-width: 47.5rem) {
+  .screen { padding: 0.5rem 0 5.5rem; }
+  .metrics-grid, .live-metrics { grid-template-columns: repeat(2, 1fr); }
+  .hero-panel { grid-template-columns: 1fr; }
+  .toolbar { flex-wrap: wrap; }
+  .toolbar input { flex-basis: 100%; }
+  .bottom-nav { position: fixed; z-index: 20; left: 0.5rem; right: 0.5rem; bottom: max(0.5rem, env(safe-area-inset-bottom)); display: grid; grid-template-columns: repeat(5, 1fr); padding: 0.375rem; border: 1px solid var(--cds-border-subtle, #e0e0e0); border-radius: 12px; background: var(--cds-ui-01, #ffffff); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12); }
+  .bottom-nav button { border: 0; background: transparent; padding: 0.625rem 0.25rem; border-radius: 8px; font-size: 0.7rem; color: inherit; opacity: 0.7; }
+  .bottom-nav button.active { background: var(--cds-layer-02, #e8e8e8); opacity: 1; font-weight: 700; }
+  .live-athlete-row { flex-wrap: wrap; }
+}

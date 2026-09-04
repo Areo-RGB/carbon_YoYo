@@ -1,0 +1,8 @@
+{
+  "name": "Yo-Yo Fitness Tracker",
+  "description": "Yo-Yo Intermittent Recovery and Beep Test fitness tracking mobile app with Kotlin and WebView",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

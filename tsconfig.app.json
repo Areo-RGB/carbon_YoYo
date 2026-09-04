@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    // Lets the codebase use explicit `.ts` import extensions, which Node's
+    // native ESM test runner (`node --test`) requires for resolution.
+    // Requires `noEmit`, which is set below.
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx"
+  },
+  "include": ["src"],
+  // Legacy React prototype (App.tsx, main.tsx, components/*.tsx) is not part
+  // of the shipped app — index.html loads main.ts which mounts App.svelte.
+  // Excluded so svelte-check only covers the code that actually builds.
+  "exclude": ["src/**/*.tsx"]
+}

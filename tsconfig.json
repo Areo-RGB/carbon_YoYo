@@ -1,0 +1,12 @@
+{
+  // Extends the app config so editors (which load this root tsconfig for
+  // files under src/) see the same options svelte-check uses — notably
+  // `allowImportingTsExtensions` for the explicit `.ts` import extensions
+  // this codebase (and Node's test runner) relies on.
+  // NOTE: no `references` here on purpose — this project is also the
+  // included source set (solution-style `files: []` + references made
+  // editors fall back to default options, hiding the flag). No npm script
+  // runs `tsc -b`, so references served no purpose.
+  "extends": "./tsconfig.app.json",
+  "include": ["src"]
+}

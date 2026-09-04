@@ -1,0 +1,33 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "android:install",
+      "problemMatcher": [],
+      "label": "npm: Build & Install Debug",
+      "detail": "scripts/install-device.sh"
+    },
+    {
+      "type": "npm",
+      "script": "android:dev",
+      "problemMatcher": [],
+      "label": "npm: Android Dev",
+      "detail": "node scripts/patch-android-manifest.mjs && tauri android dev"
+    },
+    {
+      "type": "npm",
+      "script": "dev",
+      "problemMatcher": [],
+      "label": "npm: Dev (Vite)",
+      "detail": "vite"
+    },
+    {
+      "type": "npm",
+      "script": "test",
+      "problemMatcher": [],
+      "label": "npm: Run Tests",
+      "detail": "node --experimental-strip-types --test tests/*.test.ts"
+    }
+  ]
+}
