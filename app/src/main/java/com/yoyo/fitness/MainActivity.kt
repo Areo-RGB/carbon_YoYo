@@ -2,6 +2,7 @@ package com.yoyo.fitness
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
@@ -23,13 +24,18 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.webkit.WebViewAssetLoader
 import org.json.JSONArray
+import org.json.JSONObject
 import java.net.Inet4Address
 import java.net.NetworkInterface
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private lateinit var assetLoader: WebViewAssetLoader
+    private var appInterface: WebAppInterface? = null
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,6 +44,8 @@ class MainActivity : AppCompatActivity() {
 
         // Keep screen on during fitness testing
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        requestWirelessPermissions()
 
         webView = findViewById(R.id.webView)
 
@@ -74,7 +82,7 @@ class MainActivity : AppCompatActivity() {
         settings.loadWithOverviewMode = true
         settings.cacheMode = WebSettings.LOAD_DEFAULT
 
-        webView.addJavascriptInterface(WebAppInterface(this), "Android")
+        webView.addJavascriptInterface(WebAppInterface(this).also { appInterface = it }, "Android")
 
         webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(
@@ -113,12 +121,46 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        appInterface?.shutdownSync()
+        appInterface = null
         webView.destroy()
         super.onDestroy()
     }
 
+    private fun requestWirelessPermissions() {
+        val needed = mutableListOf<String>()
+        if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            needed.add(android.Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (checkSelfPermission(android.Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                needed.add(android.Manifest.permission.BLUETOOTH_SCAN)
+            }
+            if (checkSelfPermission(android.Manifest.permission.BLUETOOTH_ADVERTISE) != PackageManager.PERMISSION_GRANTED) {
+                needed.add(android.Manifest.permission.BLUETOOTH_ADVERTISE)
+            }
+            if (checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                needed.add(android.Manifest.permission.BLUETOOTH_CONNECT)
+            }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(android.Manifest.permission.NEARBY_WIFI_DEVICES) != PackageManager.PERMISSION_GRANTED
+        ) {
+            needed.add(android.Manifest.permission.NEARBY_WIFI_DEVICES)
+        }
+        if (needed.isNotEmpty()) {
+            requestPermissions(needed.toTypedArray(), REQUEST_WIRELESS)
+        }
+    }
+
+    companion object {
+        private const val REQUEST_WIRELESS = 1001
+    }
+
     class WebAppInterface(private val activity: MainActivity) {
         private val prefs = activity.getSharedPreferences("yoyo_prefs", Context.MODE_PRIVATE)
+        private val nearby = NearbySyncManager(activity)
+        private val foundTablets = ConcurrentHashMap<String, String>()
 
         @JavascriptInterface
         fun showToast(message: String) {
@@ -190,6 +232,166 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun loadData(key: String): String? {
             return prefs.getString(key, null)
+        }
+
+        // --- Nearby Connections tablet/phone sync ---
+        // Tablet hosts (advertises); phones discover, connect, receive live
+        // state and send back miss/eliminate actions. No hotspot or IP entry needed.
+
+        @JavascriptInterface
+        fun startHosting(): String {
+            try {
+                nearby.startHosting()
+            } catch (e: SecurityException) {
+                throw RuntimeException("Nearby needs location/Bluetooth permissions. Please grant them and retry.")
+            } catch (e: Exception) {
+                Log.e("YoYoInterface", "startHosting failed", e)
+                throw RuntimeException("Could not start hosting: ${e.message}")
+            }
+            return "OK"
+        }
+
+        @JavascriptInterface
+        fun stopHosting() {
+            try {
+                nearby.stopHosting()
+            } catch (e: Exception) {
+                Log.e("YoYoInterface", "stopHosting failed", e)
+            }
+        }
+
+        @JavascriptInterface
+        fun broadcastTestState(stateJson: String) {
+            nearby.broadcastState(stateJson)
+        }
+
+        @JavascriptInterface
+        fun broadcastCommandResult(resultJson: String) {
+            nearby.broadcastResult(resultJson)
+        }
+
+        @JavascriptInterface
+        fun popRemoteActions(): String {
+            return JSONArray(nearby.drainActions()).toString()
+        }
+
+        @JavascriptInterface
+        fun connectedPhoneCount(): Int {
+            return nearby.connectedPhoneCount()
+        }
+
+        @JavascriptInterface
+        fun startTabletDiscovery(): String {
+            foundTablets.clear()
+            try {
+                nearby.startDiscovery(object : NearbySyncManager.DiscoveryListener {
+                    override fun onEndpointFound(endpointId: String, name: String) {
+                        foundTablets[endpointId] = name
+                    }
+
+                    override fun onEndpointLost(endpointId: String) {
+                        foundTablets.remove(endpointId)
+                    }
+                })
+            } catch (e: SecurityException) {
+                throw RuntimeException("Nearby needs location/Bluetooth permissions. Please grant them and retry.")
+            } catch (e: Exception) {
+                Log.e("YoYoInterface", "startTabletDiscovery failed", e)
+                throw RuntimeException("Discovery failed: ${e.message}")
+            }
+            return "OK"
+        }
+
+        @JavascriptInterface
+        fun stopTabletDiscovery() {
+            try {
+                nearby.stopDiscovery()
+            } catch (e: Exception) {
+                Log.e("YoYoInterface", "stopTabletDiscovery failed", e)
+            }
+        }
+
+        @JavascriptInterface
+        fun getFoundTablets(): String {
+            val arr = JSONArray()
+            for ((id, name) in foundTablets) {
+                arr.put(JSONObject().put("id", id).put("name", name))
+            }
+            return arr.toString()
+        }
+
+        @JavascriptInterface
+        fun connectTablet(endpointId: String): String {
+            val latch = CountDownLatch(1)
+            var ok = false
+            var message = "Timed out."
+            nearby.connectToTablet(endpointId, object : NearbySyncManager.ConnectionListener {
+                override fun onResult(id: String, success: Boolean, msg: String) {
+                    ok = success
+                    message = msg
+                    latch.countDown()
+                }
+            })
+            latch.await(20, TimeUnit.SECONDS)
+            if (!ok) throw RuntimeException("Could not connect: $message")
+            return "OK"
+        }
+
+        @JavascriptInterface
+        fun getRemoteState(): String {
+            return nearby.latestRemoteState
+        }
+
+        @JavascriptInterface
+        fun sendRemoteAction(actionJson: String) {
+            try {
+                nearby.sendAction(actionJson)
+            } catch (e: IllegalStateException) {
+                throw RuntimeException("Not connected to the tablet.")
+            } catch (e: Exception) {
+                Log.e("YoYoInterface", "sendRemoteAction failed", e)
+                throw RuntimeException("Could not send: ${e.message}")
+            }
+        }
+
+        @JavascriptInterface
+        fun sendRemoteCommand(commandJson: String) {
+            try {
+                nearby.sendRemoteCommand(commandJson)
+            } catch (e: IllegalStateException) {
+                throw RuntimeException("Not connected to the tablet.")
+            } catch (e: Exception) {
+                Log.e("YoYoInterface", "sendRemoteCommand failed", e)
+                throw RuntimeException("Could not send command: ${e.message}")
+            }
+        }
+
+        @JavascriptInterface
+        fun popRemoteResults(): String {
+            return JSONArray(nearby.drainResults()).toString()
+        }
+
+        @JavascriptInterface
+        fun disconnectTablet() {
+            try {
+                nearby.disconnectTablet()
+            } catch (e: Exception) {
+                Log.e("YoYoInterface", "disconnectTablet failed", e)
+            }
+            foundTablets.clear()
+        }
+
+        @JavascriptInterface
+        fun shutdownSync() {
+            try {
+                nearby.stopHosting()
+            } catch (_: Exception) {
+            }
+            try {
+                nearby.disconnectTablet()
+            } catch (_: Exception) {
+            }
+            foundTablets.clear()
         }
     }
 }

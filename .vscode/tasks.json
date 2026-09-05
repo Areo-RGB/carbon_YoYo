@@ -3,17 +3,10 @@
   "tasks": [
     {
       "type": "npm",
-      "script": "android:install",
+      "script": "android:apk:debug",
       "problemMatcher": [],
-      "label": "npm: Build & Install Debug",
-      "detail": "scripts/install-device.sh"
-    },
-    {
-      "type": "npm",
-      "script": "android:dev",
-      "problemMatcher": [],
-      "label": "npm: Android Dev",
-      "detail": "node scripts/patch-android-manifest.mjs && tauri android dev"
+      "label": "npm: Build & Install Debug APK",
+      "detail": "scripts/install-apk-debug.sh"
     },
     {
       "type": "npm",

@@ -3,95 +3,82 @@ import {
   athletes,
   eliminateAthlete,
   markAthleteMiss,
+  pauseTest,
+  resetTest,
+  resumeTest,
   runtime,
+  startTest,
   testState
 } from '../state/testStore.ts';
 
 export interface SyncStatus {
   isServerRunning: boolean;
-  serverUrl: string | null;
-  localIps: string[];
+  connectedPhones: number;
+}
+
+// Tablet hosting via Google Nearby Connections: phones discover this tablet,
+// connect, receive live state and send back miss/eliminate actions.
+
+interface AndroidBridge {
+  startHosting(): string;
+  stopHosting(): void;
+  broadcastTestState(stateJson: string): void;
+  broadcastCommandResult?(resultJson: string): void;
+  popRemoteActions(): string;
+  connectedPhoneCount(): number;
 }
 
 let syncTimer: number | null = null;
-let serverRunning = false;
-let currentServerUrl: string | null = null;
+let hosting = false;
 
-function isAndroidBridge(): boolean {
-  return typeof window !== 'undefined' && 'Android' in window && Boolean((window as any).Android);
-}
-
-function isTauri(): boolean {
-  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
-}
-
-export async function getHostLocalIps(): Promise<string[]> {
-  try {
-    if (isAndroidBridge()) {
-      const raw = (window as any).Android.getLocalIps();
-      if (raw) {
-        return JSON.parse(raw);
-      }
-    }
-
-    if (isTauri()) {
-      const { invoke } = await import('@tauri-apps/api/core');
-      return await invoke<string[]>('get_local_ips');
-    }
-
-    return ['127.0.0.1'];
-  } catch (err) {
-    console.warn('Failed to fetch local IPs:', err);
-    return ['127.0.0.1'];
+function getAndroidBridge(): AndroidBridge | null {
+  if (typeof window !== 'undefined' && 'Android' in window && Boolean((window as any).Android)) {
+    return (window as any).Android as AndroidBridge;
   }
+  return null;
 }
 
-export async function startHostSyncServer(port = 8080): Promise<string> {
-  try {
-    if (isTauri()) {
-      const { invoke } = await import('@tauri-apps/api/core');
-      const url = await invoke<string>('start_sync_server', { port });
-      serverRunning = true;
-      currentServerUrl = url;
-      startSyncLoop();
-      return url;
-    }
+export function isSyncHostCapable(): boolean {
+  return getAndroidBridge() !== null;
+}
 
-    const ips = await getHostLocalIps();
-    const primaryIp = ips[0] ?? '127.0.0.1';
-    const url = `http://${primaryIp}:${port}`;
-    serverRunning = true;
-    currentServerUrl = url;
-    startSyncLoop();
-    return url;
-  } catch (err) {
-    console.error('Failed to start host sync server:', err);
-    throw err;
+export function getSyncStatus(): SyncStatus {
+  const bridge = getAndroidBridge();
+  return {
+    isServerRunning: hosting,
+    connectedPhones: bridge && hosting ? bridge.connectedPhoneCount() : 0
+  };
+}
+
+export async function startHostSyncServer(): Promise<void> {
+  const bridge = getAndroidBridge();
+  if (!bridge) {
+    throw new Error('Hosting requires the native Android app (Android bridge not available).');
   }
+  bridge.startHosting();
+  hosting = true;
+  startSyncLoop();
 }
 
 export async function stopHostSyncServer(): Promise<void> {
   try {
-    if (isTauri()) {
-      const { invoke } = await import('@tauri-apps/api/core');
-      await invoke('stop_sync_server');
-    }
-    serverRunning = false;
-    currentServerUrl = null;
+    getAndroidBridge()?.stopHosting();
+  } finally {
+    hosting = false;
     if (syncTimer !== null) {
       clearInterval(syncTimer);
       syncTimer = null;
     }
-  } catch (err) {
-    console.error('Failed to stop host sync server:', err);
   }
 }
 
 function startSyncLoop() {
   if (syncTimer !== null) return;
 
-  syncTimer = window.setInterval(async () => {
-    if (!serverRunning) return;
+  syncTimer = window.setInterval(() => {
+    if (!hosting) return;
+    const bridge = getAndroidBridge();
+    if (!bridge) return;
 
     const rt = get(runtime);
     const payload = {
@@ -103,24 +90,82 @@ function startSyncLoop() {
     };
 
     try {
-      if (isTauri()) {
-        const { invoke } = await import('@tauri-apps/api/core');
-        await invoke('broadcast_test_state', {
-          stateJson: JSON.stringify(payload)
-        });
+      bridge.broadcastTestState(JSON.stringify(payload));
 
-        const actions = await invoke<string[]>('pop_remote_actions');
-        for (const actionRaw of actions) {
-          try {
-            const parsed = JSON.parse(actionRaw);
-            if (parsed.action === 'mark_miss' && parsed.athleteId) {
-              markAthleteMiss(parsed.athleteId);
-            } else if (parsed.action === 'eliminate' && parsed.athleteId) {
-              eliminateAthlete(parsed.athleteId);
-            }
-          } catch {
-            // invalid payload ignored
+      const raw = bridge.popRemoteActions();
+      if (!raw) return;
+      const actions: string[] = JSON.parse(raw);
+      for (const actionRaw of actions) {
+        try {
+          const parsed = JSON.parse(typeof actionRaw === 'string' ? actionRaw : JSON.stringify(actionRaw));
+          let accepted = false;
+          let reason = 'invalid_action';
+          const currentState = get(testState);
+
+          switch (parsed.action) {
+            case 'mark_miss':
+              if (parsed.athleteId && currentState === 'running') {
+                markAthleteMiss(parsed.athleteId);
+                accepted = true;
+                reason = 'applied';
+              } else {
+                reason = currentState !== 'running' ? 'invalid_test_state' : 'invalid_athlete';
+              }
+              break;
+            case 'eliminate':
+              if (parsed.athleteId && currentState === 'running') {
+                eliminateAthlete(parsed.athleteId);
+                accepted = true;
+                reason = 'applied';
+              } else {
+                reason = currentState !== 'running' ? 'invalid_test_state' : 'invalid_athlete';
+              }
+              break;
+            case 'start_test':
+              if (currentState === 'idle') {
+                void startTest();
+                accepted = true;
+                reason = 'applied';
+              } else {
+                reason = 'invalid_test_state';
+              }
+              break;
+            case 'pause_test':
+              if (currentState === 'running') {
+                pauseTest();
+                accepted = true;
+                reason = 'applied';
+              } else {
+                reason = 'invalid_test_state';
+              }
+              break;
+            case 'resume_test':
+              if (currentState === 'paused') {
+                void resumeTest();
+                accepted = true;
+                reason = 'applied';
+              } else {
+                reason = 'invalid_test_state';
+              }
+              break;
+            case 'reset_test':
+              resetTest();
+              accepted = true;
+              reason = 'applied';
+              break;
           }
+
+          if (parsed.requestId && bridge.broadcastCommandResult) {
+            bridge.broadcastCommandResult(
+              JSON.stringify({
+                requestId: parsed.requestId,
+                accepted,
+                reason
+              })
+            );
+          }
+        } catch {
+          // invalid payload ignored
         }
       }
     } catch (e) {

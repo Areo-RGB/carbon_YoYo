@@ -1,46 +1,206 @@
 <script lang="ts">
-  import { Button, CodeSnippet, InlineNotification, Tag, Tile, Toggle } from 'carbon-components-svelte';
-  import { onMount } from 'svelte';
+  import { Button, ContentSwitcher, InlineNotification, Switch, Tag, Tile } from 'carbon-components-svelte';
+  import { onDestroy, onMount } from 'svelte';
   import {
-    getHostLocalIps,
+    getSyncStatus,
+    isSyncHostCapable,
     startHostSyncServer,
     stopHostSyncServer
   } from '../services/syncService.ts';
+  import {
+    connectRemote,
+    disconnectRemote,
+    getFoundTablets,
+    isRemoteCapable,
+    popRemoteResults,
+    sendRemoteAction,
+    startTabletDiscovery,
+    stopTabletDiscovery,
+    type CommandResult,
+    type FoundTablet,
+    type RemoteSnapshot
+  } from '../services/remoteClient.ts';
 
-  let isServerActive = $state(false);
-  let serverUrl = $state<string | null>(null);
-  let localIps = $state<string[]>([]);
-  let port = $state(8080);
-  let errorMessage = $state<string | null>(null);
+  let modeIndex = $state(0); // 0 = Host (tablet), 1 = Join (phone)
 
-  async function loadIps() {
-    localIps = await getHostLocalIps();
-  }
+  // ---- host ----
+  let hosting = $state(false);
+  let phoneCount = $state(0);
+  let hostError = $state<string | null>(null);
+  let statusTimer: number | null = null;
 
-  async function handleToggle(event: any) {
-    const shouldRun = Boolean(event?.detail?.toggled ?? event?.detail);
-    errorMessage = null;
+  // ---- join ----
+  let tablets: FoundTablet[] = $state([]);
+  let connectingId = $state<string | null>(null);
+  let connectedName = $state<string | null>(null);
+  let snapshot: RemoteSnapshot | null = $state(null);
+  let joinError = $state<string | null>(null);
+  let commandFeedback = $state<string | null>(null);
+  let actingId = $state<string | null>(null);
+  let discoveryTimer: number | null = null;
+  let resultsTimer: number | null = null;
 
-    if (shouldRun) {
-      try {
-        const url = await startHostSyncServer(port);
-        serverUrl = url;
-        isServerActive = true;
-        await loadIps();
-      } catch (err) {
-        errorMessage = String(err);
-        isServerActive = false;
-        serverUrl = null;
+  function pollCommandResults() {
+    const results = popRemoteResults();
+    for (const res of results) {
+      if (res.accepted) {
+        commandFeedback = `Command applied by ${connectedName ?? 'tablet'}.`;
+      } else {
+        commandFeedback = `Tablet rejected command: ${res.reason.replaceAll('_', ' ')}.`;
       }
-    } else {
-      await stopHostSyncServer();
-      isServerActive = false;
-      serverUrl = null;
     }
   }
 
+  function refreshPhoneCount() {
+    if (hosting) phoneCount = getSyncStatus().connectedPhones;
+  }
+
+  async function startHosting() {
+    hostError = null;
+    try {
+      await startHostSyncServer();
+      hosting = true;
+      refreshPhoneCount();
+      statusTimer = window.setInterval(refreshPhoneCount, 2000);
+    } catch (err) {
+      hostError = String(err instanceof Error ? err.message : err);
+      hosting = false;
+    }
+  }
+
+  async function stopHosting() {
+    if (statusTimer !== null) {
+      clearInterval(statusTimer);
+      statusTimer = null;
+    }
+    await stopHostSyncServer();
+    hosting = false;
+    phoneCount = 0;
+  }
+
+  function refreshTablets() {
+    tablets = getFoundTablets();
+  }
+
+  function beginDiscovery() {
+    try {
+      startTabletDiscovery();
+      refreshTablets();
+      discoveryTimer = window.setInterval(refreshTablets, 2000);
+    } catch (err) {
+      joinError = String(err instanceof Error ? err.message : err);
+    }
+  }
+
+  function endDiscovery() {
+    if (discoveryTimer !== null) {
+      clearInterval(discoveryTimer);
+      discoveryTimer = null;
+    }
+    stopTabletDiscovery();
+  }
+
+  async function connect(tablet: FoundTablet) {
+    joinError = null;
+    commandFeedback = null;
+    connectingId = tablet.id;
+    try {
+      endDiscovery();
+      await connectRemote(tablet.id, (snap) => {
+        snapshot = snap;
+      });
+      connectedName = tablet.name;
+      resultsTimer = window.setInterval(pollCommandResults, 1000);
+    } catch (err) {
+      joinError = String(err instanceof Error ? err.message : err);
+      connectedName = null;
+      snapshot = null;
+      beginDiscovery();
+    } finally {
+      connectingId = null;
+    }
+  }
+
+  function disconnect() {
+    if (resultsTimer !== null) {
+      clearInterval(resultsTimer);
+      resultsTimer = null;
+    }
+    disconnectRemote();
+    connectedName = null;
+    snapshot = null;
+    commandFeedback = null;
+    beginDiscovery();
+  }
+
+  async function markMiss(id: string) {
+    actingId = id;
+    try {
+      await sendRemoteAction({ action: 'mark_miss', athleteId: id });
+    } catch (err) {
+      joinError = String(err instanceof Error ? err.message : err);
+    } finally {
+      actingId = null;
+    }
+  }
+
+  async function eliminate(id: string) {
+    actingId = id;
+    try {
+      await sendRemoteAction({ action: 'eliminate', athleteId: id });
+    } catch (err) {
+      joinError = String(err instanceof Error ? err.message : err);
+    } finally {
+      actingId = null;
+    }
+  }
+
+  async function sendStartTest() {
+    try {
+      await sendRemoteAction({ action: 'start_test' });
+    } catch (err) {
+      joinError = String(err instanceof Error ? err.message : err);
+    }
+  }
+
+  async function sendPauseTest() {
+    try {
+      await sendRemoteAction({ action: 'pause_test' });
+    } catch (err) {
+      joinError = String(err instanceof Error ? err.message : err);
+    }
+  }
+
+  async function sendResumeTest() {
+    try {
+      await sendRemoteAction({ action: 'resume_test' });
+    } catch (err) {
+      joinError = String(err instanceof Error ? err.message : err);
+    }
+  }
+
+  async function sendResetTest() {
+    try {
+      await sendRemoteAction({ action: 'reset_test' });
+    } catch (err) {
+      joinError = String(err instanceof Error ? err.message : err);
+    }
+  }
+
+  function onModeChange(index: number) {
+    modeIndex = index;
+    if (index === 1 && !connectedName) beginDiscovery();
+    else endDiscovery();
+  }
+
   onMount(() => {
-    loadIps();
+    if (modeIndex === 1) beginDiscovery();
+  });
+
+  onDestroy(() => {
+    if (statusTimer !== null) clearInterval(statusTimer);
+    endDiscovery();
+    disconnectRemote();
   });
 </script>
 
@@ -51,77 +211,173 @@
       <h1>Tablet Server & Remote Phones</h1>
     </div>
     <div class="screen-actions">
-      {#if isServerActive}
-        <Tag type="green">Server Active</Tag>
+      {#if hosting}
+        <Tag type="green">Hosting{phoneCount > 0 ? ` · ${phoneCount} phone${phoneCount === 1 ? '' : 's'}` : ''}</Tag>
+      {:else if connectedName}
+        <Tag type="blue">Connected</Tag>
       {:else}
         <Tag type="gray">Standalone Mode</Tag>
       {/if}
     </div>
   </div>
 
-  {#if errorMessage}
-    <div class="section-gap">
-      <InlineNotification
-        kind="error"
-        title="Server Error"
-        subtitle={errorMessage}
-      />
-    </div>
-  {/if}
-
-  <div class="panel section-gap hero-panel">
-    <div>
-      <h2>Tablet Wi-Fi Hotspot Host</h2>
-      <p>
-        Run a local sync server on this tablet. Other coaches and devices connected to your tablet’s Wi-Fi hotspot can view live shuttle progress and mark warnings/outs remotely.
-      </p>
-    </div>
-    <div>
-      <Toggle
-        labelText="Sync Server"
-        labelA="Server Stopped"
-        labelB="Server Active"
-        toggled={isServerActive}
-        on:toggle={handleToggle}
-      />
-    </div>
+  <div class="section-gap">
+    <ContentSwitcher
+      selectedIndex={modeIndex}
+      on:change={(e) => onModeChange(e.detail as number)}
+    >
+      <Switch text="Host this tablet" />
+      <Switch text="Join a tablet" />
+    </ContentSwitcher>
   </div>
 
-  {#if isServerActive}
-    <div class="section-gap">
-      <Tile>
-        <h3>Connected Devices URL</h3>
-        <p class="setting-hint">
-          Open this URL in any web browser on connected phones (no app installation required!):
-        </p>
-        <div style="margin-top: 0.75rem;">
-          {#each localIps as ip}
-            <div style="margin-bottom: 0.5rem;">
-              <CodeSnippet type="single" value={`http://${ip}:${port}`} />
-            </div>
-          {/each}
-        </div>
-      </Tile>
-    </div>
-  {/if}
-
-  <div class="settings-list">
-    <div class="setting-row vertical">
-      <strong>How to setup Tablet Hotspot:</strong>
-      <ol style="margin-top: 0.5rem; padding-left: 1.2rem; line-height: 1.6;">
-        <li>Go to Tablet <b>Settings &gt; Network / Connections &gt; Portable Hotspot</b> and turn it ON.</li>
-        <li>Have assistant coaches connect their phones to the Tablet’s Wi-Fi network.</li>
-        <li>Turn ON the <b>Tablet Sync Server</b> toggle above.</li>
-        <li>On assistant phones, open Chrome or Safari and enter the URL shown above (e.g. <code>http://192.168.43.1:8080</code>).</li>
-      </ol>
-    </div>
-
-    <div class="setting-row">
-      <div>
-        <strong>Local Network IP Addresses</strong>
-        <small>{localIps.join(', ') || 'Scanning interfaces...'}</small>
+  {#if modeIndex === 0}
+    <!-- ================= HOST ================= -->
+    {#if hostError}
+      <div class="section-gap">
+        <InlineNotification kind="error" title="Server Error" subtitle={hostError} />
       </div>
-      <Button size="small" kind="ghost" on:click={loadIps}>Refresh IPs</Button>
+    {/if}
+    {#if !isSyncHostCapable()}
+      <div class="section-gap">
+        <InlineNotification
+          kind="info"
+          title="Native app required"
+          subtitle="Hosting runs in the Android app. You are viewing the web preview, which is standalone-only."
+        />
+      </div>
+    {/if}
+
+    <div class="panel section-gap hero-panel">
+      <div>
+        <h2>One-tap hosting</h2>
+        <p>
+          Nearby Connections works over Bluetooth and Wi-Fi — no hotspot, no IP addresses.
+          Assistant coaches open this app on their phones and press Connect.
+        </p>
+      </div>
+      <div>
+        {#if hosting}
+          <Button kind="danger" on:click={stopHosting}>Stop hosting</Button>
+        {:else}
+          <Button kind="primary" disabled={!isSyncHostCapable()} on:click={startHosting}>Start hosting</Button>
+        {/if}
+      </div>
     </div>
-  </div>
+
+    {#if hosting}
+      <div class="section-gap">
+        <Tile>
+          <h3>Waiting for phones…</h3>
+          <p class="setting-hint">
+            {phoneCount === 0
+              ? 'On each phone open Sync → Join a tablet and tap this tablet.'
+              : `${phoneCount} phone${phoneCount === 1 ? '' : 's'} connected and receiving live updates.`}
+          </p>
+        </Tile>
+      </div>
+    {/if}
+  {:else}
+    <!-- ================= JOIN ================= -->
+    {#if joinError}
+      <div class="section-gap">
+        <InlineNotification kind="error" title="Connection Error" subtitle={joinError} />
+      </div>
+    {/if}
+    {#if !isRemoteCapable()}
+      <div class="section-gap">
+        <InlineNotification
+          kind="info"
+          title="Native app required"
+          subtitle="Joining runs in the Android app. You are viewing the web preview, which is standalone-only."
+        />
+      </div>
+    {/if}
+
+    {#if !connectedName}
+      <div class="panel section-gap">
+        <h2>Nearby tablets</h2>
+        <p class="setting-hint">Make sure Bluetooth and location are on, then tap your tablet below.</p>
+      </div>
+      <div class="settings-list">
+        {#each tablets as tablet (tablet.id)}
+          <div class="setting-row">
+            <div>
+              <strong>{tablet.name}</strong>
+              <small>Tap to connect</small>
+            </div>
+            <Button
+              size="small"
+              kind="primary"
+              disabled={connectingId !== null}
+              on:click={() => connect(tablet)}
+            >{connectingId === tablet.id ? 'Connecting…' : 'Connect'}</Button>
+          </div>
+        {:else}
+          <div class="setting-row"><div><strong>Searching…</strong><small>Start hosting on the tablet first.</small></div></div>
+        {/each}
+      </div>
+      <div class="section-gap">
+        <Button size="small" kind="ghost" on:click={refreshTablets}>Refresh</Button>
+      </div>
+    {:else}
+      {#if commandFeedback}
+        <div class="section-gap">
+          <InlineNotification kind="info" title="Remote Control" subtitle={commandFeedback} />
+        </div>
+      {/if}
+
+      <div class="panel section-gap hero-panel">
+        <div>
+          <h2>Level {snapshot?.level ?? '–'} · Shuttle {snapshot?.shuttle ?? '–'}</h2>
+          <p>{snapshot?.distance ?? 0} m · {connectedName}</p>
+        </div>
+        <div class="screen-actions">
+          <Tag type={snapshot?.status === 'running' ? 'green' : 'gray'}>{snapshot?.status ?? '…'}</Tag>
+          <Button size="small" kind="danger-ghost" on:click={disconnect}>Disconnect</Button>
+        </div>
+      </div>
+
+      <!-- Remote Test Control Toolbar -->
+      <div class="panel section-gap" style="display: flex; gap: 0.75rem; align-items: center; justify-content: flex-start; flex-wrap: wrap;">
+        {#if snapshot?.status === 'idle'}
+          <Button size="small" kind="primary" on:click={sendStartTest}>Start Test</Button>
+        {:else if snapshot?.status === 'running'}
+          <Button size="small" kind="secondary" on:click={sendPauseTest}>Pause Test</Button>
+        {:else if snapshot?.status === 'paused'}
+          <Button size="small" kind="primary" on:click={sendResumeTest}>Resume Test</Button>
+          <Button size="small" kind="danger-tertiary" on:click={sendResetTest}>Reset Test</Button>
+        {:else}
+          <Button size="small" kind="tertiary" on:click={sendResetTest}>Reset Test</Button>
+        {/if}
+      </div>
+
+      <div class="settings-list">
+        {#each snapshot?.athletes ?? [] as athlete (athlete.id)}
+          <div class="setting-row">
+            <div>
+              <strong>{athlete.name}</strong>
+              <small>{athlete.status}{athlete.consecutiveMisses > 0 ? ` · ${athlete.consecutiveMisses} miss` : ''}</small>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <Button
+                size="small"
+                kind="secondary"
+                disabled={athlete.status === 'eliminated' || actingId === athlete.id}
+                on:click={() => markMiss(athlete.id)}
+              >Miss</Button>
+              <Button
+                size="small"
+                kind="danger"
+                disabled={athlete.status === 'eliminated' || actingId === athlete.id}
+                on:click={() => eliminate(athlete.id)}
+              >Out</Button>
+            </div>
+          </div>
+        {:else}
+          <div class="setting-row"><div><strong>No athletes yet</strong><small>Start a test on the tablet first.</small></div></div>
+        {/each}
+      </div>
+    {/if}
+  {/if}
 </div>
