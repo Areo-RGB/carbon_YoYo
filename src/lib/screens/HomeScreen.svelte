@@ -1,6 +1,6 @@
 <script lang="ts">
-  import ScreenTitle from '../components/ScreenTitle.svelte';
-  import RosterSelector from '../components/RosterSelector.svelte';
+  import ScreenTitle from '$lib/components/ScreenTitle.svelte';
+  import RosterSelector from '$lib/components/RosterSelector.svelte';
 </script>
 
 <section class="screen">

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { InlineNotification, Slider, Tile, Toggle } from 'carbon-components-svelte';
-  import ScreenTitle from '../components/ScreenTitle.svelte';
+  import ScreenTitle from '$lib/components/ScreenTitle.svelte';
   import {
     boostEnabled,
     setBoostEnabled,
@@ -8,7 +8,7 @@
     setVolumeBoost,
     soundEnabled,
     volumeBoost
-  } from '../state/testStore.ts';
+  } from '$lib/state/testStore.ts';
 </script>
 
 <section class="screen">

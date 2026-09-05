@@ -1,4 +1,4 @@
-import type { Athlete, TestSession } from '../domain/models.ts';
+import type { Athlete, TestSession } from '$lib/domain/models.ts';
 
 export interface PersistedState {
   sessions: TestSession[];

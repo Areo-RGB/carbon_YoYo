@@ -1,10 +1,10 @@
 <script lang="ts">
   import { Button, InlineNotification, Tile } from 'carbon-components-svelte';
-  import ScreenTitle from '../components/ScreenTitle.svelte';
-  import DistanceMeter from '../components/DistanceMeter.svelte';
-  import AthleteCard from '../components/AthleteCard.svelte';
-  import { getProtocol } from '../../domain/protocol.ts';
-  import { activeTab, selectedTestType } from '../state/app.ts';
+  import ScreenTitle from '$lib/components/ScreenTitle.svelte';
+  import DistanceMeter from '$lib/components/DistanceMeter.svelte';
+  import AthleteCard from '$lib/components/AthleteCard.svelte';
+  import { getProtocol } from '$lib/domain/protocol.ts';
+  import { activeTab, selectedTestType } from '$lib/state/app.ts';
   import {
     athletes,
     pauseTest,
@@ -15,7 +15,7 @@
     testState,
     undoDescription,
     undoLastAction
-  } from '../state/testStore.ts';
+  } from '$lib/state/testStore.ts';
 
   const protocol = $derived(getProtocol($selectedTestType));
   const list = $derived($athletes.filter((a) => a.isSelected));

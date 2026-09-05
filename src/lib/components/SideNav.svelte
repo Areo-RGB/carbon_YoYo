@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { AppTab } from '../../domain/models.ts';
-  import { navItems } from '../state/app.ts';
+  import type { AppTab } from '$lib/domain/models.ts';
+  import { navItems } from '$lib/state/app.ts';
 
   interface Props {
     active: AppTab;

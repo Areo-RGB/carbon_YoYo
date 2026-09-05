@@ -1,12 +1,12 @@
 <script lang="ts">
   import { Button, Tag, Tile } from 'carbon-components-svelte';
   import AthleteAvatar from './AthleteAvatar.svelte';
-  import type { Athlete } from '../../domain/models.ts';
+  import type { Athlete } from '$lib/domain/models.ts';
   import {
     eliminateAthlete,
     markAthleteMiss,
     testState
-  } from '../state/testStore.ts';
+  } from '$lib/state/testStore.ts';
 
   interface Props {
     athlete: Athlete;

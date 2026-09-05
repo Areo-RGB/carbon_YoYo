@@ -9,15 +9,15 @@
     Content,
     SkipToContent,
   } from 'carbon-components-svelte';
-  import AppHeader from './lib/components/AppHeader.svelte';
-  import BottomNav from './lib/components/BottomNav.svelte';
-  import HomeScreen from './lib/screens/HomeScreen.svelte';
-  import RosterScreen from './lib/screens/RosterScreen.svelte';
-  import LiveScreen from './lib/screens/LiveScreen.svelte';
-  import ResultsScreen from './lib/screens/ResultsScreen.svelte';
-  import ProtocolScreen from './lib/screens/ProtocolScreen.svelte';
-  import HistoryScreen from './lib/screens/HistoryScreen.svelte';
-  import SettingsScreen from './lib/screens/SettingsScreen.svelte';
+  import AppHeader from '$lib/components/AppHeader.svelte';
+  import BottomNav from '$lib/components/BottomNav.svelte';
+  import HomeScreen from '$lib/screens/HomeScreen.svelte';
+  import RosterScreen from '$lib/screens/RosterScreen.svelte';
+  import LiveScreen from '$lib/screens/LiveScreen.svelte';
+  import ResultsScreen from '$lib/screens/ResultsScreen.svelte';
+  import ProtocolScreen from '$lib/screens/ProtocolScreen.svelte';
+  import HistoryScreen from '$lib/screens/HistoryScreen.svelte';
+  import SettingsScreen from '$lib/screens/SettingsScreen.svelte';
   import Home from 'carbon-icons-svelte/lib/Home.svelte';
   import UserMultiple from 'carbon-icons-svelte/lib/UserMultiple.svelte';
   import Activity from 'carbon-icons-svelte/lib/Activity.svelte';
@@ -26,10 +26,10 @@
   import Time from 'carbon-icons-svelte/lib/Time.svelte';
   import Settings from 'carbon-icons-svelte/lib/Settings.svelte';
   import type { Component } from 'svelte';
-  import { activeTab, selectedTestType, navItems } from './lib/state/app.ts';
-  import { setSelectedTestType } from './lib/state/testStore.ts';
-  import type { AppTab } from './domain/models.ts';
-  import type { TestType } from './domain/protocol.ts';
+  import { activeTab, selectedTestType, navItems } from '$lib/state/app.ts';
+  import { setSelectedTestType } from '$lib/state/testStore.ts';
+  import type { AppTab } from '$lib/domain/models.ts';
+  import type { TestType } from '$lib/domain/protocol.ts';
 
   let isSideNavOpen = $state(false);
 

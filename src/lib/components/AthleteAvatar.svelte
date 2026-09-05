@@ -1,6 +1,6 @@
 <script lang="ts">
   import { UserAvatar } from 'carbon-components-svelte';
-  import { getAthleteAvatar, getAthleteFullName } from '../../domain/avatar.ts';
+  import { getAthleteAvatar, getAthleteFullName } from '$lib/domain/avatar.ts';
 
   interface Props {
     name: string;

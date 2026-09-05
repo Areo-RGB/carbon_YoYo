@@ -1,6 +1,6 @@
 <script lang="ts">
   import { ContentSwitcher, Switch } from 'carbon-components-svelte';
-  import type { TestType } from '../../domain/protocol.ts';
+  import type { TestType } from '$lib/domain/protocol.ts';
 
   interface Props {
     testType: TestType;

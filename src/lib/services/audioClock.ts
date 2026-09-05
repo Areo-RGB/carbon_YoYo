@@ -1,4 +1,4 @@
-import type { TestType } from '../domain/protocol.ts';
+import type { TestType } from '$lib/domain/protocol.ts';
 
 const YOYO_AUDIO = '/assets/audio/audio.mp3';
 const BEEP_AUDIO = '/assets/audio/beep_test.m4a';

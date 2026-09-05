@@ -1,16 +1,16 @@
 <script lang="ts">
   import { Button, DataTable, InlineNotification, Tile } from 'carbon-components-svelte';
-  import ScreenTitle from '../components/ScreenTitle.svelte';
-  import { getProtocol } from '../../domain/protocol.ts';
-  import { activeTab, selectedTestType } from '../state/app.ts';
+  import ScreenTitle from '$lib/components/ScreenTitle.svelte';
+  import { getProtocol } from '$lib/domain/protocol.ts';
+  import { activeTab, selectedTestType } from '$lib/state/app.ts';
   import {
     athletes,
     resetTest,
     saveSession,
     sessionSavedId,
     testState
-  } from '../state/testStore.ts';
-  import { makeCsv } from '../../services/export.ts';
+  } from '$lib/state/testStore.ts';
+  import { makeCsv } from '$lib/services/export.ts';
 
   const protocol = $derived(getProtocol($selectedTestType));
   const results = $derived(

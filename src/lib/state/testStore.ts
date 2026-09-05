@@ -4,21 +4,21 @@ import {
   type Athlete,
   type TestSession,
   type TestState
-} from '../../domain/models.ts';
-import { getProtocol, type TestType } from '../../domain/protocol.ts';
-import { deriveRuntime, type RuntimeSnapshot } from '../../domain/runtime.ts';
-import { rankAthletes } from '../../domain/results.ts';
+} from '$lib/domain/models.ts';
+import { getProtocol, type TestType } from '$lib/domain/protocol.ts';
+import { deriveRuntime, type RuntimeSnapshot } from '$lib/domain/runtime.ts';
+import { rankAthletes } from '$lib/domain/results.ts';
 import {
   applyMiss,
   clearExpiredBeepWarning,
   finalizeAthlete
-} from '../../domain/athleteRules.ts';
-import { ProtocolAudioClock } from '../../services/audioClock.ts';
+} from '$lib/domain/athleteRules.ts';
+import { ProtocolAudioClock } from '$lib/services/audioClock.ts';
 import {
   loadPersistedState,
   savePersistedState
-} from '../../services/persistence.ts';
-import { activeTab, selectedTestType } from './app.ts';
+} from '$lib/services/persistence.ts';
+import { activeTab, selectedTestType } from '$lib/state/app.ts';
 
 interface UndoEntry {
   athlete: Athlete;

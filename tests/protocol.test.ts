@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getProtocol } from '../src/domain/protocol.ts';
-import { deriveRuntime, protocolDurationMs } from '../src/domain/runtime.ts';
+import { getProtocol } from '../src/lib/domain/protocol.ts';
+import { deriveRuntime, protocolDurationMs } from '../src/lib/domain/runtime.ts';
 
 test('Yo-Yo IR1 golden protocol table has 91 repetitions and 3640 m', () => {
   const p = getProtocol('yoyoIR1');
@@ -61,8 +61,8 @@ test('VO2 calculations are stable at reference inputs', () => {
   assert.equal(beep.calculateVo2Max(1000, 12.0), 50.8);
 });
 
-import { applyMiss, clearExpiredBeepWarning, finalizeAthlete } from '../src/domain/athleteRules.ts';
-import type { Athlete } from '../src/domain/models.ts';
+import { applyMiss, clearExpiredBeepWarning, finalizeAthlete } from '../src/lib/domain/athleteRules.ts';
+import type { Athlete } from '../src/lib/domain/models.ts';
 
 const baseAthlete: Athlete = {
   id: 'a1', name: 'Athlete', status: 'running', isSelected: true, consecutiveMisses: 0

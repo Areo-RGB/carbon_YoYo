@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
-import type { AppTab } from '../../domain/models.ts';
-import type { TestType } from '../../domain/protocol.ts';
+import type { AppTab } from '$lib/domain/models.ts';
+import type { TestType } from '$lib/domain/protocol.ts';
 
 export const activeTab = writable<AppTab>('startup');
 export const selectedTestType = writable<TestType>('yoyoIR1');

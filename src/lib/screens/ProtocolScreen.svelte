@@ -1,7 +1,7 @@
 <script lang="ts">
-  import ScreenTitle from '../components/ScreenTitle.svelte';
-  import { getProtocol } from '../../domain/protocol.ts';
-  import type { TestType } from '../../domain/protocol.ts';
+  import ScreenTitle from '$lib/components/ScreenTitle.svelte';
+  import { getProtocol } from '$lib/domain/protocol.ts';
+  import type { TestType } from '$lib/domain/protocol.ts';
   interface Props { testType: TestType }
   let { testType }: Props = $props();
   let protocol = $derived(getProtocol(testType));

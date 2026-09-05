@@ -1,9 +1,9 @@
 <script lang="ts">
   import { Button, TextInput, Tile } from 'carbon-components-svelte';
   import AthleteAvatar from './AthleteAvatar.svelte';
-  import { getAthleteFullName } from '../../domain/avatar.ts';
-  import { getProtocol } from '../../domain/protocol.ts';
-  import { activeTab, selectedTestType } from '../state/app.ts';
+  import { getAthleteFullName } from '$lib/domain/avatar.ts';
+  import { getProtocol } from '$lib/domain/protocol.ts';
+  import { activeTab, selectedTestType } from '$lib/state/app.ts';
   import {
     addAthlete,
     athletes,
@@ -13,7 +13,7 @@
     startTest,
     testState,
     toggleAthleteSelected
-  } from '../state/testStore.ts';
+  } from '$lib/state/testStore.ts';
 
   interface Props {
     /** Show the "Back" button returning to the dashboard (roster tab only). */

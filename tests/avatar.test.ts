@@ -6,8 +6,8 @@ import {
   getAthleteFullName,
   getAthleteInitials,
   matchAthleteRecord
-} from '../src/domain/avatar.ts';
-import { DEFAULT_ATHLETES } from '../src/domain/models.ts';
+} from '../src/lib/domain/avatar.ts';
+import { DEFAULT_ATHLETES } from '../src/lib/domain/models.ts';
 
 test('every athlete in DEFAULT_ATHLETES matches an avatar image', () => {
   for (const name of DEFAULT_ATHLETES) {

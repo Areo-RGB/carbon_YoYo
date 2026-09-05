@@ -18,11 +18,10 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "paths": {
+      "$lib": ["./src/lib"],
+      "$lib/*": ["./src/lib/*"]
+    }
   },
-  "include": ["src"],
-  // Legacy React prototype (App.tsx, main.tsx, components/*.tsx) is not part
-  // of the shipped app — index.html loads main.ts which mounts App.svelte.
-  // Excluded so svelte-check only covers the code that actually builds.
-  "exclude": ["src/**/*.tsx"]
+  "include": ["src"]
 }

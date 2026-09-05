@@ -1,8 +1,8 @@
 <script lang="ts">
   import { ProgressBar, Tag, Tile } from 'carbon-components-svelte';
-  import { getProtocol } from '../../domain/protocol.ts';
-  import { elapsedMs, runtime, testState } from '../state/testStore.ts';
-  import { selectedTestType } from '../state/app.ts';
+  import { getProtocol } from '$lib/domain/protocol.ts';
+  import { elapsedMs, runtime, testState } from '$lib/state/testStore.ts';
+  import { selectedTestType } from '$lib/state/app.ts';
 
   const protocol = $derived(getProtocol($selectedTestType));
   const stateType = $derived(
