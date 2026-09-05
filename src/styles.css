@@ -13,12 +13,9 @@ button:disabled { opacity: .45; cursor: default; }
    tighten it slightly for this app. */
 .carbon-protocol-row { margin-bottom: 1rem; }
 
-/* Edge-to-edge: keep Carbon chrome clear of the status bar and display
-   cutout when the WebView draws behind system bars (Android edge-to-edge
-   + viewport-fit=cover). env() is 0 on desktop, so these are no-ops there. */
-.bx--header { padding-top: env(safe-area-inset-top); height: calc(3rem + env(safe-area-inset-top)); }
-.bx--side-nav { top: calc(3rem + env(safe-area-inset-top)); height: calc(100% - 3rem - env(safe-area-inset-top)); }
-.bx--content { margin-top: calc(3rem + env(safe-area-inset-top)); }
+.bx--header { height: 3rem; }
+.bx--side-nav { top: 3rem; height: calc(100% - 3rem); }
+.bx--content { margin-top: 3rem; }
 
 main { min-width: 0; }
 .screen { max-width: 75rem; margin: 0 auto; padding: 1rem 0 6rem; }

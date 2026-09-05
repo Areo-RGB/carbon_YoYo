@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { Button, InlineNotification, Slider, Tile, Toggle } from 'carbon-components-svelte';
+  import { InlineNotification, Slider, Tile, Toggle } from 'carbon-components-svelte';
   import ScreenTitle from '../components/ScreenTitle.svelte';
-  import { activeTab } from '../state/app.ts';
   import {
     boostEnabled,
     setBoostEnabled,
@@ -13,11 +12,7 @@
 </script>
 
 <section class="screen">
-  <ScreenTitle
-    eyebrow="Configuration"
-    title="Settings"
-    description="Audio, preferences, and multi-device sync."
-  />
+  <ScreenTitle eyebrow="Configuration" title="Settings" description="Audio and preferences." />
 
   <Tile class="section-gap">
     <div class="setting-stack">
@@ -56,15 +51,5 @@
         />
       {/if}
     </div>
-  </Tile>
-
-  <Tile class="section-gap">
-    <strong>Tablet Wi-Fi Sync Server & Remote Phones</strong>
-    <p class="setting-hint" style="margin: 0.5rem 0 1rem 0;">
-      Turn this tablet into a local host server over Wi-Fi Hotspot. Assistant coaches can open a web browser on their phones to view live shuttle updates and log athlete misses/outs in real time.
-    </p>
-    <Button size="small" kind="primary" on:click={() => activeTab.set('sync')}>
-      Open Wi-Fi Sync Settings
-    </Button>
   </Tile>
 </section>

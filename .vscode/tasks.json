@@ -3,13 +3,6 @@
   "tasks": [
     {
       "type": "npm",
-      "script": "android:apk:debug",
-      "problemMatcher": [],
-      "label": "npm: Build & Install Debug APK",
-      "detail": "scripts/install-apk-debug.sh"
-    },
-    {
-      "type": "npm",
       "script": "dev",
       "problemMatcher": [],
       "label": "npm: Dev (Vite)",

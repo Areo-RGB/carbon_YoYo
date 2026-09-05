@@ -6,14 +6,13 @@ export default defineConfig({
   plugins: [svelte(), optimizeCss()],
   base: './',
   build: {
-    outDir: 'app/src/main/assets/dist',
+    outDir: 'dist',
     emptyOutDir: true
   },
   clearScreen: false,
   server: {
-    port: 1420,
+    port: 5173,
     strictPort: true,
-    host: '0.0.0.0',
-    watch: { ignored: ['**/src-tauri/**'] }
+    host: '0.0.0.0'
   }
 });

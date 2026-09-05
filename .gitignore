@@ -1,16 +1,6 @@
 node_modules/
 dist/
-build/
-.gradle/
-.idea/
 .DS_Store
-*.jks
-*.keystore
-local.properties
-mcp_config.json
-# Tauri
-src-tauri/target/
-src-tauri/gen/
 # IDE - keep tasks but ignore other configs
 .vscode/*
 !.vscode/tasks.json

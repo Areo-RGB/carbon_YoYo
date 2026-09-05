@@ -8,7 +8,7 @@
     "build": "svelte-check --tsconfig ./tsconfig.app.json && vite build",
     "check": "svelte-check --tsconfig ./tsconfig.app.json",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
-    "android:apk:debug": "bash scripts/install-apk-debug.sh"
+    "preview": "vite preview"
   },
   "dependencies": {
     "carbon-components-svelte": "^0.111.1",

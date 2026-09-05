@@ -11,6 +11,5 @@ export const navItems: Array<{ id: AppTab; label: string; short: string }> = [
   { id: 'live', label: 'Live Test', short: 'Live' },
   { id: 'leaderboard', label: 'Results', short: 'Results' },
   { id: 'history', label: 'History', short: 'History' },
-  { id: 'sync', label: 'Wi-Fi Sync', short: 'Sync' },
   { id: 'settings', label: 'Settings', short: 'Settings' }
 ];

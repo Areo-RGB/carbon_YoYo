@@ -17,7 +17,6 @@
   import ResultsScreen from './lib/screens/ResultsScreen.svelte';
   import ProtocolScreen from './lib/screens/ProtocolScreen.svelte';
   import HistoryScreen from './lib/screens/HistoryScreen.svelte';
-  import SyncScreen from './lib/screens/SyncScreen.svelte';
   import SettingsScreen from './lib/screens/SettingsScreen.svelte';
   import Home from 'carbon-icons-svelte/lib/Home.svelte';
   import UserMultiple from 'carbon-icons-svelte/lib/UserMultiple.svelte';
@@ -25,7 +24,6 @@
   import Trophy from 'carbon-icons-svelte/lib/Trophy.svelte';
   import Document from 'carbon-icons-svelte/lib/Document.svelte';
   import Time from 'carbon-icons-svelte/lib/Time.svelte';
-  import Wifi from 'carbon-icons-svelte/lib/Wifi.svelte';
   import Settings from 'carbon-icons-svelte/lib/Settings.svelte';
   import type { Component } from 'svelte';
   import { activeTab, selectedTestType, navItems } from './lib/state/app.ts';
@@ -43,7 +41,6 @@
     leaderboard: Trophy,
     tabelle: Document,
     history: Time,
-    sync: Wifi,
     settings: Settings,
   };
 
@@ -104,8 +101,6 @@
       <ProtocolScreen testType={$selectedTestType} />
     {:else if $activeTab === 'history'}
       <HistoryScreen />
-    {:else if $activeTab === 'sync'}
-      <SyncScreen />
     {:else}
       <SettingsScreen />
     {/if}

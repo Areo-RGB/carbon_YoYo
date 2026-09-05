@@ -1,10 +1,10 @@
-# Agent Guidelines: Yo-Yo Tauri Mobile App
+# Agent Guidelines: Yo-Yo Web App
 
 ## Architecture
 - **Framework**: Svelte 5 (`$props()`, `$state()`, `$derived()`) with Vite
 - **UI System**: IBM Carbon Design System via `carbon-components-svelte` and `carbon-icons-svelte`
-- **Native Container**: Tauri v2 (`@tauri-apps/api`, `@tauri-apps/plugin-store`) targeting Android and Desktop
 - **Audio Clock**: Web Audio API synchronized with protocol schedules (`services/audioClock.ts`)
+- **Persistence**: `localStorage` via `services/persistence.ts`
 
 ## Directory Layout
 - `src/domain/`: Pure TypeScript logic and domain definitions (`protocol.ts`, `runtime.ts`, `athleteRules.ts`, `models.ts`, `avatar.ts`). Kept independent of UI.

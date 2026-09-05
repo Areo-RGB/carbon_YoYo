@@ -7,7 +7,7 @@ export interface PersistedState {
   boostEnabled: boolean;
 }
 
-const fallbackKey = 'yoyo-tauri-state-v1';
+const storageKey = 'yoyo-web-state-v1';
 const defaults: PersistedState = {
   sessions: [],
   roster: [],
@@ -15,25 +15,9 @@ const defaults: PersistedState = {
   boostEnabled: true
 };
 
-function isAndroidBridge(): boolean {
-  return typeof window !== 'undefined' && 'Android' in window && Boolean((window as any).Android);
-}
-
-function getAndroidBridge(): any {
-  return (window as any).Android;
-}
-
 export async function loadPersistedState(): Promise<PersistedState> {
   try {
-    if (isAndroidBridge()) {
-      const bridge = getAndroidBridge();
-      const raw = bridge.loadData(fallbackKey);
-      if (raw) {
-        return { ...defaults, ...JSON.parse(raw) };
-      }
-    }
-
-    const raw = localStorage.getItem(fallbackKey);
+    const raw = localStorage.getItem(storageKey);
     return raw ? { ...defaults, ...JSON.parse(raw) } : defaults;
   } catch (error) {
     console.warn('Could not load persisted state', error);
@@ -43,11 +27,7 @@ export async function loadPersistedState(): Promise<PersistedState> {
 
 export async function savePersistedState(state: PersistedState): Promise<void> {
   try {
-    const serialized = JSON.stringify(state);
-    if (isAndroidBridge()) {
-      getAndroidBridge().saveData(fallbackKey, serialized);
-    }
-    localStorage.setItem(fallbackKey, serialized);
+    localStorage.setItem(storageKey, JSON.stringify(state));
   } catch (error) {
     console.warn('Could not persist app state', error);
   }

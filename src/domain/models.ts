@@ -2,7 +2,7 @@ import type { TestType } from './protocol.ts';
 
 export type AthleteStatus = 'running' | 'warned' | 'eliminated';
 export type TestState = 'idle' | 'running' | 'paused' | 'completed';
-export type AppTab = 'startup' | 'setup' | 'live' | 'leaderboard' | 'tabelle' | 'history' | 'sync' | 'settings';
+export type AppTab = 'startup' | 'setup' | 'live' | 'leaderboard' | 'tabelle' | 'history' | 'settings';
 
 export interface Athlete {
   id: string;

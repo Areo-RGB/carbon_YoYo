@@ -15,7 +15,7 @@
 <div class="carbon-app-header">
   <div class="carbon-brand">
     <strong>Yo-Yo Fitness Tracker</strong>
-    <span>Tauri + Svelte + Carbon</span>
+    <span>Svelte + Carbon</span>
   </div>
 
   <ContentSwitcher
